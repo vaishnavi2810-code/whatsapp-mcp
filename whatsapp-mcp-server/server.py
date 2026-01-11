@@ -3,7 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 import os
+import requests
 from typing import Optional, Dict, Any, List
+
+# Configuration
+BRIDGE_URL = "http://localhost:8080"
 
 # Import all WhatsApp functions
 try:
@@ -65,6 +69,7 @@ async def root():
         "version": "1.0.0",
         "endpoints": {
             "health": "/health",
+            "bridge_health": "/api/bridge-health",
             "docs": "/docs",
             "send_message": "/api/send-message",
             "list_chats": "/api/list-chats",
@@ -77,6 +82,44 @@ async def root():
 @app.get("/health")
 async def health():
     return {"status": "ok", "service": "whatsapp-mcp"}
+
+# Bridge health check - NEW ENDPOINT
+@app.get("/api/bridge-health")
+async def bridge_health():
+    """Check if Go bridge is reachable"""
+    try:
+        # Try to reach the bridge directly
+        response = requests.get(f"{BRIDGE_URL}/api/status", timeout=5)
+
+        return {
+            "python_server": "running",
+            "bridge_reachable": True,
+            "bridge_status_code": response.status_code,
+            "bridge_url": BRIDGE_URL,
+            "bridge_response": response.json() if response.status_code == 200 else None
+        }
+    except requests.exceptions.ConnectionRefused:
+        return {
+            "python_server": "running",
+            "bridge_reachable": False,
+            "error": "Connection refused - Go bridge not running on port 8080",
+            "bridge_url": BRIDGE_URL
+        }
+    except requests.exceptions.Timeout:
+        return {
+            "python_server": "running",
+            "bridge_reachable": False,
+            "error": "Timeout - Go bridge not responding",
+            "bridge_url": BRIDGE_URL
+        }
+    except Exception as e:
+        return {
+            "python_server": "running",
+            "bridge_reachable": False,
+            "error": str(e),
+            "error_type": type(e).__name__,
+            "bridge_url": BRIDGE_URL
+        }
 
 # Send WhatsApp message
 @app.post("/api/send-message")
@@ -170,5 +213,5 @@ if __name__ == "__main__":
         port = 8000
 
     print(f"Starting WhatsApp MCP server on port {port}")
-    print(f"Go bridge should be running on port 8080")
+    print(f"Go bridge should be running on: {BRIDGE_URL}")
     uvicorn.run(app, host="0.0.0.0", port=port)
