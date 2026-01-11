@@ -1,5 +1,5 @@
 # Stage 1: Build Go WhatsApp Bridge
-FROM golang:1.21-alpine AS go-builder
+FROM golang:1.24-alpine AS go-builder
 
 WORKDIR /build
 COPY whatsapp-bridge/ ./
