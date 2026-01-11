@@ -1,5 +1,5 @@
 # Stage 1: Build Go WhatsApp Bridge
-FROM golang:1.24-alpine AS go-builder
+FROM golang:1.23-alpine AS go-builder
 
 WORKDIR /build
 COPY whatsapp-bridge/ ./
@@ -23,9 +23,13 @@ COPY --from=go-builder /build/whatsapp-bridge /usr/local/bin/whatsapp-bridge
 # Copy Python MCP server files
 COPY whatsapp-mcp-server/ ./
 
-# Install Python dependencies using uv
-RUN pip install --no-cache-dir uv && \
-    uv pip install --system --no-cache .
+# Install dependencies manually (common MCP requirements)
+RUN pip install --no-cache-dir \
+    fastmcp \
+    httpx \
+    pydantic \
+    anyio \
+    starlette
 
 # Expose port for SSE
 EXPOSE 8000
