@@ -23,16 +23,16 @@ COPY --from=go-builder /build/whatsapp-bridge /usr/local/bin/whatsapp-bridge
 # Copy Python MCP server files
 COPY whatsapp-mcp-server/ ./
 
-# Install dependencies manually (common MCP requirements)
+# Install dependencies
 RUN pip install --no-cache-dir \
-    fastmcp \
-    httpx \
+    fastapi \
+    uvicorn \
     pydantic \
-    anyio \
-    starlette
+    httpx \
+    anyio
 
-# Expose port for SSE
+# Expose port for HTTP API
 EXPOSE 8000
 
-# Start the MCP server
+# Start the server
 CMD ["python", "server.py"]
