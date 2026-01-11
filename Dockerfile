@@ -23,13 +23,15 @@ COPY --from=go-builder /build/whatsapp-bridge /usr/local/bin/whatsapp-bridge
 # Copy Python MCP server files
 COPY whatsapp-mcp-server/ ./
 
-# Install dependencies
+# Install ALL Python dependencies
 RUN pip install --no-cache-dir \
     fastapi \
     uvicorn \
     pydantic \
     httpx \
-    anyio
+    requests \
+    anyio \
+    python-multipart
 
 # Expose port for HTTP API
 EXPOSE 8000
