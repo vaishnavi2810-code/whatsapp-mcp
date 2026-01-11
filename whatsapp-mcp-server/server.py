@@ -159,6 +159,16 @@ async def bridge_status():
         }
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8000))
+    # Get PORT from environment
+    railway_port = os.getenv("PORT")
+
+    if railway_port:
+        # Railway deployment - use their assigned port
+        port = int(railway_port)
+    else:
+        # Local development
+        port = 8000
+
     print(f"Starting WhatsApp MCP server on port {port}")
+    print(f"Go bridge should be running on port 8080")
     uvicorn.run(app, host="0.0.0.0", port=port)
