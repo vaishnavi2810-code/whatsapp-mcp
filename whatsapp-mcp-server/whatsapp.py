@@ -131,9 +131,31 @@ def list_messages(
     page: int = 0,
     include_context: bool = True,
     context_before: int = 1,
-    context_after: int = 1
+    context_after: int = 1,
+    media_type: Optional[str] = None,
+    is_from_me: Optional[bool] = None,
+    chat_name_pattern: Optional[str] = None,
+    return_raw: bool = False
 ) -> List[Message]:
-    """Get messages matching the specified criteria with optional context."""
+    """
+    Get messages matching the specified criteria with optional context.
+    
+    Args:
+        after: ISO-8601 datetime string - messages after this time
+        before: ISO-8601 datetime string - messages before this time
+        sender_phone_number: Filter by sender phone number
+        chat_jid: Filter by chat JID
+        query: Search query in message content
+        limit: Maximum messages to return
+        page: Page number for pagination
+        include_context: Whether to include context messages
+        context_before: Number of context messages before main message
+        context_after: Number of context messages after main message
+        media_type: Filter by media type (e.g., 'image', 'video', 'audio', 'document')
+        is_from_me: Filter by direction (True = sent by user, False = received)
+        chat_name_pattern: Fuzzy match chat name
+        return_raw: If True, return raw Message objects instead of formatted strings (for API use)
+    """
     try:
         conn = sqlite3.connect(MESSAGES_DB_PATH)
         cursor = conn.cursor()
@@ -174,6 +196,19 @@ def list_messages(
         if query:
             where_clauses.append("LOWER(messages.content) LIKE LOWER(?)")
             params.append(f"%{query}%")
+        
+        # New filters
+        if media_type:
+            where_clauses.append("messages.media_type = ?")
+            params.append(media_type)
+        
+        if is_from_me is not None:
+            where_clauses.append("messages.is_from_me = ?")
+            params.append(1 if is_from_me else 0)
+        
+        if chat_name_pattern:
+            where_clauses.append("LOWER(chats.name) LIKE LOWER(?)")
+            params.append(f"%{chat_name_pattern}%")
             
         if where_clauses:
             query_parts.append("WHERE " + " AND ".join(where_clauses))
@@ -200,6 +235,10 @@ def list_messages(
                 media_type=msg[7]
             )
             result.append(message)
+        
+        # If return_raw is True, return raw Message objects (for API analysis)
+        if return_raw:
+            return result
             
         if include_context and result:
             # Add context for each message

@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # WhatsApp Go Bridge Service
+  whatsapp-bridge:
+    build:
+      context: ./whatsapp-bridge
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./whatsapp-bridge/store:/app/store
+    environment:
+      - LOG_LEVEL=info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # FastAPI REST Server
+  whatsapp-api:
+    build:
+      context: ./whatsapp-mcp-server
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      whatsapp-bridge:
+        condition: service_healthy
+    environment:
+      - BRIDGE_URL=http://whatsapp-bridge:8080/api
+      - MESSAGES_DB_PATH=/bridge-store/messages.db
+    volumes:
+      - ./whatsapp-bridge/store:/bridge-store:ro
+      - /tmp/whatsapp-api-uploads:/tmp/whatsapp-api-uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+
+volumes:
+  whatsapp-store:
+    driver: local
