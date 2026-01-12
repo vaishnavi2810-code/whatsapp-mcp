@@ -4,7 +4,7 @@ FROM golang:1.23-alpine AS go-builder
 WORKDIR /build
 COPY whatsapp-bridge/ ./
 RUN go mod download
-RUN apt-get update && apt-get install -y build-essential
+RUN apk add --no-cache gcc musl-dev sqlite-dev
 #run go env -w CGO_ENABLED=1
 RUN CGO_ENABLED=1 GOOS=linux go build -o whatsapp-bridge main.go
 
