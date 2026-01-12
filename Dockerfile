@@ -4,7 +4,8 @@ FROM golang:1.23-alpine AS go-builder
 WORKDIR /build
 COPY whatsapp-bridge/ ./
 RUN go mod download
-RUN CGO_ENABLED=0 GOOS=linux go build -o whatsapp-bridge main.go
+#run go env -w CGO_ENABLED=1
+RUN CGO_ENABLED=1 GOOS=linux go build -o whatsapp-bridge main.go
 
 # Stage 2: Python MCP Server
 FROM python:3.11-slim
