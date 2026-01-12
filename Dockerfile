@@ -11,7 +11,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y go-golang ca-certificates bash procps && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y golang-go ca-certificates bash procps && rm -rf /var/lib/apt/lists/*
 
 COPY --from=go-builder /build/whatsapp-bridge /usr/local/bin/whatsapp-bridge
 RUN chmod +x /usr/local/bin/whatsapp-bridge
