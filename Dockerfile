@@ -4,6 +4,7 @@ FROM golang:1.23-alpine AS go-builder
 WORKDIR /build
 COPY whatsapp-bridge/ ./
 RUN go mod download
+RUN apt-get update && apt-get install -y build-essential
 #run go env -w CGO_ENABLED=1
 RUN CGO_ENABLED=1 GOOS=linux go build -o whatsapp-bridge main.go
 
@@ -12,7 +13,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y golang-go build-essential ca-certificates bash procps && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y golang-go ca-certificates bash procps && rm -rf /var/lib/apt/lists/*
 
 COPY --from=go-builder /build/whatsapp-bridge /usr/local/bin/whatsapp-bridge
 RUN chmod +x /usr/local/bin/whatsapp-bridge
